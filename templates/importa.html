@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Importa Galaxy Watch{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>⌚ Importa da Galaxy Watch</h2>
+    </div>
+
+    <div class="info-card">
+        <h3>📱 Come esportare i dati</h3>
+        <ol class="info-list">
+            <li>Apri <strong>Samsung Health</strong> sul telefono</li>
+            <li>Vai su <strong>⋮ Menu → Impostazioni</strong></li>
+            <li>Seleziona <strong>Scarica i dati personali</strong></li>
+            <li>Riceverai un file ZIP via email</li>
+            <li>Estrai i file CSV e caricali qui</li>
+        </ol>
+    </div>
+
+    <form method="POST" action="{{ url_for('importa') }}" enctype="multipart/form-data" class="form">
+        <div class="form-group">
+            <label for="tipo_dato">Tipo di Dati</label>
+            <select id="tipo_dato" name="tipo_dato" required class="input-field">
+                <option value="exercise">🏃 Allenamenti (Exercise)</option>
+                <option value="heart_rate">❤️ Frequenza Cardiaca</option>
+                <option value="sleep">😴 Dati Sonno</option>
+                <option value="oxygen">🫁 Saturazione Ossigeno (SpO2)</option>
+                <option value="body_composition">⚖️ Composizione Corporea</option>
+                <option value="steps">👣 Passi Giornalieri</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="file">File CSV</label>
+            <input type="file" id="file" name="file" accept=".csv" required class="input-field file-input">
+            <small>File CSV esportato da Samsung Health (max 16 MB)</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">📤 Importa Dati</button>
+    </form>
+
+    <div class="info-card info-card-secondary">
+        <h3>📋 File supportati</h3>
+        <table class="info-table">
+            <tr>
+                <td><strong>Allenamenti</strong></td>
+                <td>com.samsung.health.exercise.*.csv</td>
+            </tr>
+            <tr>
+                <td><strong>FC</strong></td>
+                <td>com.samsung.health.heart_rate.*.csv</td>
+            </tr>
+            <tr>
+                <td><strong>Sonno</strong></td>
+                <td>com.samsung.health.sleep.*.csv</td>
+            </tr>
+            <tr>
+                <td><strong>SpO2</strong></td>
+                <td>com.samsung.health.oxygen_saturation.*.csv</td>
+            </tr>
+            <tr>
+                <td><strong>Corpo</strong></td>
+                <td>com.samsung.health.body_composition.*.csv</td>
+            </tr>
+            <tr>
+                <td><strong>Passi</strong></td>
+                <td>com.samsung.health.step_count.*.csv</td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

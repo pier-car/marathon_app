@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Nuovo Dato Biometrico{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <a href="{{ url_for('biometrici') }}" class="btn-back">← Indietro</a>
+        <h2>❤️ Nuovo Dato Biometrico</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('nuovo_biometrico') }}" class="form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="data">Data *</label>
+                <input type="date" id="data" name="data" value="{{ oggi }}" required class="input-field">
+            </div>
+            <div class="form-group">
+                <label for="ora">Ora</label>
+                <input type="time" id="ora" name="ora" class="input-field">
+            </div>
+        </div>
+
+        <h3 class="form-section-title">💓 Cuore</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="fc_riposo">FC Riposo (bpm)</label>
+                <input type="number" id="fc_riposo" name="fc_riposo" min="30" max="120"
+                       class="input-field" inputmode="numeric" placeholder="55">
+            </div>
+            <div class="form-group">
+                <label for="hrv">HRV (ms)</label>
+                <input type="number" id="hrv" name="hrv" step="0.1" min="0"
+                       class="input-field" inputmode="decimal" placeholder="45">
+            </div>
+        </div>
+
+        <h3 class="form-section-title">🫁 Ossigeno & Temperatura</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="spo2">SpO2 (%)</label>
+                <input type="number" id="spo2" name="spo2" step="0.1" min="80" max="100"
+                       class="input-field" inputmode="decimal" placeholder="98">
+            </div>
+            <div class="form-group">
+                <label for="temperatura_corporea">Temperatura (°C)</label>
+                <input type="number" id="temperatura_corporea" name="temperatura_corporea"
+                       step="0.1" min="34" max="42"
+                       class="input-field" inputmode="decimal" placeholder="36.5">
+            </div>
+        </div>
+
+        <h3 class="form-section-title">😴 Sonno & Attività</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ore_sonno">Ore Sonno</label>
+                <input type="number" id="ore_sonno" name="ore_sonno" step="0.1" min="0" max="16"
+                       class="input-field" inputmode="decimal" placeholder="7.5">
+            </div>
+            <div class="form-group">
+                <label for="qualita_sonno">Qualità Sonno (1-100)</label>
+                <input type="number" id="qualita_sonno" name="qualita_sonno" min="1" max="100"
+                       class="input-field" inputmode="numeric" placeholder="80">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="stress_level">Livello Stress (1-100)</label>
+                <input type="number" id="stress_level" name="stress_level" min="1" max="100"
+                       class="input-field" inputmode="numeric" placeholder="30">
+            </div>
+            <div class="form-group">
+                <label for="passi">Passi Giornalieri</label>
+                <input type="number" id="passi" name="passi" min="0"
+                       class="input-field" inputmode="numeric" placeholder="10000">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="calorie_giornaliere">Calorie Bruciate</label>
+            <input type="number" id="calorie_giornaliere" name="calorie_giornaliere" min="0"
+                   class="input-field" inputmode="numeric" placeholder="2500">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">💾 Salva Dati Biometrici</button>
+    </form>
+</div>
+{% endblock %}

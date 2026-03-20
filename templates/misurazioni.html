@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Misurazioni Corporee{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>⚖️ Misurazioni Corporee</h2>
+        <a href="{{ url_for('nuova_misurazione') }}" class="btn btn-primary btn-sm">+ Nuova</a>
+    </div>
+
+    {% if dati %}
+    <div class="list">
+        {% for d in dati %}
+        <div class="list-item">
+            <div class="list-item-main">
+                {% if d['peso'] %}<span><strong>{{ d['peso'] }} kg</strong></span>{% endif %}
+                {% if d['bmi'] %}<span>BMI: {{ d['bmi'] }}</span>{% endif %}
+                {% if d['grasso_corporeo'] %}<span>Grasso: {{ d['grasso_corporeo'] }}%</span>{% endif %}
+            </div>
+            <div class="list-item-details">
+                {% if d['massa_muscolare'] %}<span>💪 Muscoli: {{ d['massa_muscolare'] }}%</span>{% endif %}
+                {% if d['acqua_corporea'] %}<span>💧 Acqua: {{ d['acqua_corporea'] }}%</span>{% endif %}
+                {% if d['massa_ossea'] %}<span>🦴 Ossa: {{ d['massa_ossea'] }} kg</span>{% endif %}
+            </div>
+            <div class="list-item-details">
+                {% if d['circonferenza_vita'] %}<span>Vita: {{ d['circonferenza_vita'] }} cm</span>{% endif %}
+                {% if d['circonferenza_fianchi'] %}<span>Fianchi: {{ d['circonferenza_fianchi'] }} cm</span>{% endif %}
+            </div>
+            <div class="list-item-footer">
+                <span class="list-item-meta">{{ d['data'] }}</span>
+                {% if d['note'] %}<span class="note">{{ d['note'] }}</span>{% endif %}
+                <form method="POST" action="{{ url_for('elimina_misurazione', id=d['id']) }}"
+                      class="inline-form" onsubmit="return confirm('Eliminare?')">
+                    <button type="submit" class="btn-delete">🗑️</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">⚖️</div>
+        <p>Nessuna misurazione registrata</p>
+        <a href="{{ url_for('nuova_misurazione') }}" class="btn btn-primary">Aggiungi misurazione</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Header con countdown -->
+    <div class="hero-card">
+        <div class="hero-emoji">🏃‍♂️</div>
+        <h1>Maratona di Torino</h1>
+        <p class="hero-date">19 Aprile 2026 — Target {{ "%.2f"|format(target_pace) }} min/km</p>
+        <div class="countdown">
+            <div class="countdown-number">{{ giorni_mancanti }}</div>
+            <div class="countdown-label">giorni alla gara</div>
+        </div>
+    </div>
+
+    <!-- Statistiche rapide -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats['total'] }}</div>
+            <div class="stat-label">Allenamenti</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(stats['km_totali']) }}</div>
+            <div class="stat-label">Km Totali</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.2f"|format(stats['passo_medio']) if stats['passo_medio'] else '-' }}</div>
+            <div class="stat-label">Passo Medio</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(stats['km_max']) if stats['km_max'] else '-' }}</div>
+            <div class="stat-label">Km Max</div>
+        </div>
+    </div>
+
+    <!-- Metriche corpo -->
+    <div class="stats-grid stats-grid-2">
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(ultimo_peso['peso']) if ultimo_peso else '-' }}</div>
+            <div class="stat-label">Peso (kg)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ ultima_fc['fc_riposo'] if ultima_fc else '-' }}</div>
+            <div class="stat-label">FC Riposo</div>
+        </div>
+    </div>
+
+    <!-- Grafico passo nel tempo -->
+    {% if passo_trend|length > 1 %}
+    <div class="chart-card">
+        <h3>📈 Andamento Passo</h3>
+        <canvas id="passoChart"></canvas>
+    </div>
+    {% endif %}
+
+    <!-- Grafico km settimanali -->
+    {% if km_settimanali|length > 0 %}
+    <div class="chart-card">
+        <h3>📊 Km per Settimana</h3>
+        <canvas id="kmChart"></canvas>
+    </div>
+    {% endif %}
+
+    <!-- Ultimi allenamenti -->
+    {% if allenamenti %}
+    <div class="section-card">
+        <h3>🕐 Ultimi Allenamenti</h3>
+        {% for a in allenamenti %}
+        <div class="list-item">
+            <div class="list-item-main">
+                <span class="badge badge-{{ a['tipo']|lower }}">{{ a['tipo'] }}</span>
+                <strong>{{ a['km'] }} km</strong>
+                {% if a['passo_min_km'] %}<span class="pace">{{ "%.2f"|format(a['passo_min_km']) }} min/km</span>{% endif %}
+            </div>
+            <div class="list-item-meta">{{ a['data'] }}
+                {% if a['sorgente'] == 'galaxy_watch' %}<span class="badge badge-watch">⌚</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('allenamenti') }}" class="btn btn-outline btn-full">Vedi tutti</a>
+    </div>
+    {% endif %}
+
+    <!-- Quick actions -->
+    <div class="quick-actions">
+        <a href="{{ url_for('nuovo_allenamento') }}" class="btn btn-primary btn-full">➕ Nuovo Allenamento</a>
+        <a href="{{ url_for('importa') }}" class="btn btn-secondary btn-full">⌚ Importa da Galaxy Watch</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if passo_trend|length > 1 %}
+createLineChart('passoChart',
+    {{ passo_trend|map(attribute='data')|list|tojson }},
+    {{ passo_trend|map(attribute='passo_min_km')|list|tojson }},
+    'Passo (min/km)', '#e94560', {{ target_pace }}
+);
+{% endif %}
+
+{% if km_settimanali|length > 0 %}
+createBarChart('kmChart',
+    {{ km_settimanali|map(attribute='settimana')|list|tojson }},
+    {{ km_settimanali|map(attribute='km')|list|tojson }},
+    'Km', '#0f3460'
+);
+{% endif %}
+</script>
+{% endblock %}
