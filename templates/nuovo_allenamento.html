@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Nuovo Allenamento{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <a href="{{ url_for('allenamenti') }}" class="btn-back">← Indietro</a>
+        <h2>📝 Nuovo Allenamento</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('nuovo_allenamento') }}" class="form">
+        <div class="form-group">
+            <label for="data">Data</label>
+            <input type="date" id="data" name="data" value="{{ oggi }}" required class="input-field">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="km">Distanza (km) *</label>
+                <input type="number" id="km" name="km" step="0.1" min="0.1" required
+                       class="input-field" inputmode="decimal" placeholder="10.0">
+            </div>
+            <div class="form-group">
+                <label for="durata_minuti">Durata (min)</label>
+                <input type="number" id="durata_minuti" name="durata_minuti" step="0.1" min="0"
+                       class="input-field" inputmode="decimal" placeholder="50">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="passo_min_km">Passo (min/km)</label>
+                <input type="number" id="passo_min_km" name="passo_min_km" step="0.01" min="2"
+                       class="input-field" inputmode="decimal" placeholder="4.35">
+                <small>Lascia vuoto per calcolo automatico</small>
+            </div>
+            <div class="form-group">
+                <label for="tipo">Tipo *</label>
+                <select id="tipo" name="tipo" required class="input-field">
+                    <option value="Lento">🐢 Lento</option>
+                    <option value="Medio">🏃 Medio</option>
+                    <option value="Lungo">🦒 Lungo</option>
+                    <option value="Ripetute">⚡ Ripetute</option>
+                    <option value="Progressivo">📈 Progressivo</option>
+                    <option value="Tempo Run">🎯 Tempo Run</option>
+                    <option value="Fartlek">🔄 Fartlek</option>
+                    <option value="Recupero">🧘 Recupero</option>
+                    <option value="Gara">🏆 Gara</option>
+                </select>
+            </div>
+        </div>
+
+        <h3 class="form-section-title">❤️ Dati dal Watch (opzionali)</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="fc_media">FC Media</label>
+                <input type="number" id="fc_media" name="fc_media" min="30" max="220"
+                       class="input-field" inputmode="numeric" placeholder="145">
+            </div>
+            <div class="form-group">
+                <label for="fc_max">FC Max</label>
+                <input type="number" id="fc_max" name="fc_max" min="30" max="230"
+                       class="input-field" inputmode="numeric" placeholder="175">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="cadenza">Cadenza (spm)</label>
+                <input type="number" id="cadenza" name="cadenza" min="100" max="220"
+                       class="input-field" inputmode="numeric" placeholder="170">
+            </div>
+            <div class="form-group">
+                <label for="calorie">Calorie</label>
+                <input type="number" id="calorie" name="calorie" min="0"
+                       class="input-field" inputmode="numeric" placeholder="500">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="note">Note</label>
+            <textarea id="note" name="note" class="input-field" rows="2"
+                      placeholder="Come ti sei sentito?"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">💾 Salva Allenamento</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Nuova Misurazione{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <a href="{{ url_for('misurazioni') }}" class="btn-back">← Indietro</a>
+        <h2>⚖️ Nuova Misurazione</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('nuova_misurazione') }}" class="form">
+        <div class="form-group">
+            <label for="data">Data *</label>
+            <input type="date" id="data" name="data" value="{{ oggi }}" required class="input-field">
+        </div>
+
+        <h3 class="form-section-title">⚖️ Peso & Composizione</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="peso">Peso (kg)</label>
+                <input type="number" id="peso" name="peso" step="0.1" min="30" max="200"
+                       class="input-field" inputmode="decimal" placeholder="75.0">
+            </div>
+            <div class="form-group">
+                <label for="altezza_cm">Altezza (cm) per BMI</label>
+                <input type="number" id="altezza_cm" name="altezza_cm" step="1" min="100" max="250"
+                       class="input-field" inputmode="numeric" placeholder="178">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="grasso_corporeo">Grasso Corporeo (%)</label>
+                <input type="number" id="grasso_corporeo" name="grasso_corporeo" step="0.1" min="3" max="60"
+                       class="input-field" inputmode="decimal" placeholder="15.0">
+            </div>
+            <div class="form-group">
+                <label for="massa_muscolare">Massa Muscolare (%)</label>
+                <input type="number" id="massa_muscolare" name="massa_muscolare" step="0.1" min="10" max="60"
+                       class="input-field" inputmode="decimal" placeholder="42.0">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="massa_ossea">Massa Ossea (kg)</label>
+                <input type="number" id="massa_ossea" name="massa_ossea" step="0.1" min="1" max="10"
+                       class="input-field" inputmode="decimal" placeholder="3.2">
+            </div>
+            <div class="form-group">
+                <label for="acqua_corporea">Acqua Corporea (%)</label>
+                <input type="number" id="acqua_corporea" name="acqua_corporea" step="0.1" min="30" max="80"
+                       class="input-field" inputmode="decimal" placeholder="60.0">
+            </div>
+        </div>
+
+        <h3 class="form-section-title">📐 Circonferenze</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="circonferenza_vita">Vita (cm)</label>
+                <input type="number" id="circonferenza_vita" name="circonferenza_vita" step="0.5" min="40" max="150"
+                       class="input-field" inputmode="decimal" placeholder="82">
+            </div>
+            <div class="form-group">
+                <label for="circonferenza_fianchi">Fianchi (cm)</label>
+                <input type="number" id="circonferenza_fianchi" name="circonferenza_fianchi" step="0.5" min="50" max="150"
+                       class="input-field" inputmode="decimal" placeholder="95">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="note">Note</label>
+            <textarea id="note" name="note" class="input-field" rows="2"
+                      placeholder="Condizioni di misurazione..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">💾 Salva Misurazione</button>
+    </form>
+</div>
+{% endblock %}

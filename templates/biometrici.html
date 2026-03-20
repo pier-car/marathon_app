@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dati Biometrici{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>❤️ Dati Biometrici</h2>
+        <a href="{{ url_for('nuovo_biometrico') }}" class="btn btn-primary btn-sm">+ Nuovo</a>
+    </div>
+
+    {% if dati %}
+    <div class="list">
+        {% for d in dati %}
+        <div class="list-item">
+            <div class="list-item-main">
+                {% if d['fc_riposo'] %}<span>❤️ FC: {{ d['fc_riposo'] }} bpm</span>{% endif %}
+                {% if d['hrv'] %}<span>📊 HRV: {{ d['hrv'] }} ms</span>{% endif %}
+                {% if d['spo2'] %}<span>🫁 SpO2: {{ d['spo2'] }}%</span>{% endif %}
+            </div>
+            <div class="list-item-details">
+                {% if d['temperatura_corporea'] %}<span>🌡️ {{ d['temperatura_corporea'] }}°C</span>{% endif %}
+                {% if d['stress_level'] %}<span>😰 Stress: {{ d['stress_level'] }}</span>{% endif %}
+                {% if d['ore_sonno'] %}<span>😴 {{ d['ore_sonno'] }}h sonno</span>{% endif %}
+                {% if d['passi'] %}<span>👣 {{ d['passi'] }} passi</span>{% endif %}
+            </div>
+            <div class="list-item-footer">
+                <span class="list-item-meta">{{ d['data'] }}{% if d['ora'] %} {{ d['ora'] }}{% endif %}
+                    {% if d['sorgente'] == 'galaxy_watch' %}<span class="badge badge-watch">⌚</span>{% endif %}
+                </span>
+                <form method="POST" action="{{ url_for('elimina_biometrico', id=d['id']) }}"
+                      class="inline-form" onsubmit="return confirm('Eliminare?')">
+                    <button type="submit" class="btn-delete">🗑️</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">❤️</div>
+        <p>Nessun dato biometrico registrato</p>
+        <a href="{{ url_for('nuovo_biometrico') }}" class="btn btn-primary">Aggiungi dati</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

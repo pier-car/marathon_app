@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Nutrizione{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>🍽️ Nutrizione & Integrazione</h2>
+        <a href="{{ url_for('nuova_nutrizione') }}" class="btn btn-primary btn-sm">+ Nuova</a>
+    </div>
+
+    {% if dati %}
+    <div class="list">
+        {% for d in dati %}
+        <div class="list-item">
+            <div class="list-item-main">
+                {% if d['calorie_assunte'] %}<span>🔥 {{ d['calorie_assunte'] }} kcal</span>{% endif %}
+                {% if d['proteine_gr'] %}<span>🥩 {{ d['proteine_gr'] }}g prot</span>{% endif %}
+                {% if d['carboidrati_gr'] %}<span>🍝 {{ d['carboidrati_gr'] }}g carb</span>{% endif %}
+                {% if d['grassi_gr'] %}<span>🥑 {{ d['grassi_gr'] }}g grassi</span>{% endif %}
+            </div>
+            <div class="list-item-details">
+                {% if d['acqua_litri'] %}<span>💧 {{ d['acqua_litri'] }}L acqua</span>{% endif %}
+                {% if d['peso'] %}<span>⚖️ {{ d['peso'] }} kg</span>{% endif %}
+                {% if d['creatina_preso'] %}<span>💊 Creatina ✓</span>{% endif %}
+            </div>
+            <div class="list-item-footer">
+                <span class="list-item-meta">{{ d['data'] }}</span>
+                {% if d['note'] %}<span class="note">{{ d['note'] }}</span>{% endif %}
+                <form method="POST" action="{{ url_for('elimina_nutrizione', id=d['id']) }}"
+                      class="inline-form" onsubmit="return confirm('Eliminare?')">
+                    <button type="submit" class="btn-delete">🗑️</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🍽️</div>
+        <p>Nessun dato nutrizionale registrato</p>
+        <a href="{{ url_for('nuova_nutrizione') }}" class="btn btn-primary">Aggiungi dati</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

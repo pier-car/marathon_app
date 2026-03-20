@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Marathon 4:35">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <title>🏃 Marathon 4:35 - {% block title %}Home{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="{{ url_for('allenamenti') }}" class="nav-item {% if request.endpoint in ('allenamenti', 'nuovo_allenamento') %}active{% endif %}">
+            <span class="nav-icon">🏃</span>
+            <span class="nav-label">Allenamenti</span>
+        </a>
+        <a href="{{ url_for('biometrici') }}" class="nav-item {% if request.endpoint in ('biometrici', 'nuovo_biometrico') %}active{% endif %}">
+            <span class="nav-icon">❤️</span>
+            <span class="nav-label">Bio</span>
+        </a>
+        <a href="{{ url_for('misurazioni') }}" class="nav-item {% if request.endpoint in ('misurazioni', 'nuova_misurazione') %}active{% endif %}">
+            <span class="nav-icon">⚖️</span>
+            <span class="nav-label">Corpo</span>
+        </a>
+        <a href="{{ url_for('importa') }}" class="nav-item {% if request.endpoint == 'importa' %}active{% endif %}">
+            <span class="nav-icon">⌚</span>
+            <span class="nav-label">Watch</span>
+        </a>
+    </nav>
+
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

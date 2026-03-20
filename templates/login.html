@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>🔐 Login - Marathon 4:35</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="login-body">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="login-container">
+        <div class="login-icon">🏃‍♂️</div>
+        <h1>Marathon 4:35</h1>
+        <p class="login-subtitle">Maratona di Torino</p>
+        <form method="POST" action="{{ url_for('login') }}">
+            <input type="password" name="pin" placeholder="Inserisci PIN"
+                   class="input-field" inputmode="numeric" autocomplete="current-password" required>
+            <button type="submit" class="btn btn-primary btn-full">Entra</button>
+        </form>
+    </div>
+</body>
+</html>

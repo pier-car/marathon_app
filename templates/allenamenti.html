@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Allenamenti{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>🏃 Allenamenti</h2>
+        <a href="{{ url_for('nuovo_allenamento') }}" class="btn btn-primary btn-sm">+ Nuovo</a>
+    </div>
+
+    {% if allenamenti %}
+    <div class="list">
+        {% for a in allenamenti %}
+        <div class="list-item">
+            <div class="list-item-main">
+                <span class="badge badge-{{ a['tipo']|lower }}">{{ a['tipo'] }}</span>
+                <strong>{{ a['km'] }} km</strong>
+                {% if a['passo_min_km'] %}
+                <span class="pace">{{ "%.2f"|format(a['passo_min_km']) }} min/km</span>
+                {% endif %}
+                {% if a['durata_minuti'] %}
+                <span class="duration">{{ "%.0f"|format(a['durata_minuti']) }} min</span>
+                {% endif %}
+            </div>
+            <div class="list-item-details">
+                {% if a['fc_media'] %}<span>❤️ {{ a['fc_media'] }}</span>{% endif %}
+                {% if a['fc_max'] %}<span>max {{ a['fc_max'] }}</span>{% endif %}
+                {% if a['cadenza'] %}<span>👟 {{ a['cadenza'] }} spm</span>{% endif %}
+                {% if a['calorie'] %}<span>🔥 {{ a['calorie'] }} kcal</span>{% endif %}
+            </div>
+            <div class="list-item-footer">
+                <span class="list-item-meta">{{ a['data'] }}
+                    {% if a['sorgente'] == 'galaxy_watch' %}<span class="badge badge-watch">⌚</span>{% endif %}
+                </span>
+                {% if a['note'] %}<span class="note">{{ a['note'] }}</span>{% endif %}
+                <form method="POST" action="{{ url_for('elimina_allenamento', id=a['id']) }}"
+                      class="inline-form" onsubmit="return confirm('Eliminare?')">
+                    <button type="submit" class="btn-delete">🗑️</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🏃‍♂️</div>
+        <p>Nessun allenamento registrato</p>
+        <a href="{{ url_for('nuovo_allenamento') }}" class="btn btn-primary">Registra il primo</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
