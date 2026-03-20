@@ -89,7 +89,8 @@ def inizializza_db():
         'grassi_gr': 'INTEGER',
         'calorie_assunte': 'INTEGER',
         'acqua_litri': 'REAL',
-        'note': 'TEXT'
+        'note': 'TEXT',
+        'proteine_prese': 'BOOLEAN DEFAULT 0',
     })
 
     conn.commit()

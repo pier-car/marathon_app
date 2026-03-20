@@ -34,7 +34,7 @@ if (typeof Chart !== 'undefined') {
 }
 
 // Create a line chart (used for pace trend, weight, etc.)
-function createLineChart(canvasId, labels, data, label, color, targetLine) {
+function createLineChart(canvasId, labels, data, label, color, targetLine, targetLineMax) {
     var ctx = document.getElementById(canvasId);
     if (!ctx) return;
 
@@ -52,13 +52,26 @@ function createLineChart(canvasId, labels, data, label, color, targetLine) {
 
     if (targetLine !== undefined) {
         datasets.push({
-            label: 'Target',
+            label: 'Target ' + targetLine,
             data: Array(labels.length).fill(targetLine),
             borderColor: '#2ecc71',
             borderDash: [5, 5],
             borderWidth: 1,
             pointRadius: 0,
             fill: false,
+        });
+    }
+
+    if (targetLineMax !== undefined) {
+        datasets.push({
+            label: 'Target ' + targetLineMax,
+            data: Array(labels.length).fill(targetLineMax),
+            borderColor: '#2ecc71',
+            borderDash: [3, 3],
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: '-1',
+            backgroundColor: 'rgba(46, 204, 113, 0.10)',
         });
     }
 
