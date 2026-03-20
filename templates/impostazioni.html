@@ -7,6 +7,25 @@
         <h2>⚙️ Impostazioni</h2>
     </div>
 
+    <!-- Strava Integration -->
+    <div class="info-card">
+        <h3>🔄 Sincronizzazione Strava</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+            Collega Strava per importare automaticamente gli allenamenti di corsa.
+        </p>
+
+        {% if not strava_configured %}
+        <p style="color: #ff9800; font-size: 0.85rem;">
+            ⚠️ Configura <code>STRAVA_CLIENT_ID</code> e <code>STRAVA_CLIENT_SECRET</code> per abilitare l'integrazione.
+        </p>
+        {% elif strava_connected %}
+        <p style="color: #4caf50; font-size: 0.9rem; margin-bottom: 12px;">✅ Account Strava collegato</p>
+        <a href="{{ url_for('strava_page') }}" class="btn btn-primary btn-full">🔄 Vai a Sincronizzazione</a>
+        {% else %}
+        <a href="{{ url_for('strava_connect') }}" class="btn btn-primary btn-full">🏃 Connetti con Strava</a>
+        {% endif %}
+    </div>
+
     <!-- Backup Database -->
     <div class="info-card">
         <h3>💾 Backup Database</h3>

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Strava Sync{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>🔄 Sincronizzazione Strava</h2>
+    </div>
+
+    {% if not strava_configured %}
+    <div class="info-card">
+        <h3>⚠️ Configurazione Richiesta</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Per utilizzare la sincronizzazione Strava, configura le variabili d'ambiente
+            <code>STRAVA_CLIENT_ID</code> e <code>STRAVA_CLIENT_SECRET</code>.
+            Consulta il README per le istruzioni su come registrare l'app su Strava.
+        </p>
+    </div>
+
+    {% elif not strava_connected %}
+    <div class="info-card">
+        <h3>🔗 Collega Strava</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+            Collega il tuo account Strava per importare automaticamente gli allenamenti di corsa.
+        </p>
+        <a href="{{ url_for('strava_connect') }}" class="btn btn-primary btn-full">
+            🏃 Connetti con Strava
+        </a>
+    </div>
+
+    {% else %}
+    <div class="info-card">
+        <h3>✅ Strava Collegato</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+            Il tuo account Strava è collegato. Sincronizza per importare le ultime attività di corsa.
+            I dati vengono confrontati con il target <strong>{{ "%.2f"|format(target_pace) }}-{{ "%.2f"|format(target_pace_max) }} min/km</strong>.
+        </p>
+
+        <form method="POST" action="{{ url_for('sync_strava') }}" style="margin-bottom: 12px;">
+            <button type="submit" class="btn btn-primary btn-full">
+                🔄 Sincronizza Attività
+            </button>
+        </form>
+
+        <form method="POST" action="{{ url_for('strava_disconnect') }}">
+            <button type="submit" class="btn btn-outline btn-full"
+                    onclick="return confirm('Vuoi scollegare l\'account Strava?')">
+                🔌 Scollega Strava
+            </button>
+        </form>
+    </div>
+
+    {% if strava_workouts %}
+    <div class="info-card info-card-secondary">
+        <h3>📊 Ultimi Allenamenti da Strava</h3>
+        <div class="data-list">
+            {% for a in strava_workouts %}
+            <div class="data-item">
+                <div class="data-header">
+                    <span class="data-date">{{ a['data'] }}</span>
+                    <span class="data-badge badge-corsa">{{ a['tipo'] }}</span>
+                </div>
+                <div class="data-details">
+                    <span>📏 {{ "%.1f"|format(a['km']) }} km</span>
+                    {% if a['durata_minuti'] %}
+                    <span>⏱️ {{ "%.0f"|format(a['durata_minuti']) }} min</span>
+                    {% endif %}
+                    {% if a['passo_min_km'] %}
+                    <span {% if target_pace <= a['passo_min_km'] <= target_pace_max %}style="color: #4caf50; font-weight: bold;"{% elif a['passo_min_km'] > target_pace_max %}style="color: #ff9800;"{% else %}style="color: #2196f3;"{% endif %}>
+                        🏃 {{ "%.2f"|format(a['passo_min_km']) }} min/km
+                    </span>
+                    {% endif %}
+                    {% if a['fc_media'] %}
+                    <span>❤️ {{ a['fc_media'] }} bpm</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="info-card info-card-secondary" style="margin-top: 16px;">
+        <h3>ℹ️ Come funziona</h3>
+        <ol class="info-list">
+            <li>Collega il tuo account Strava</li>
+            <li>Premi <strong>Sincronizza</strong> per importare le corse</li>
+            <li>I dati (distanza, tempo, FC, cadenza) vengono salvati automaticamente</li>
+            <li>Il passo viene confrontato con il target {{ "%.2f"|format(target_pace) }}-{{ "%.2f"|format(target_pace_max) }} min/km</li>
+            <li>Usa l'<a href="{{ url_for('importa') }}" style="color: var(--accent);">import CSV</a> per dati biometrici avanzati (composizione corporea)</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
