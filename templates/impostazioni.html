@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Impostazioni{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header">
+        <h2>⚙️ Impostazioni</h2>
+    </div>
+
+    <!-- Backup Database -->
+    <div class="info-card">
+        <h3>💾 Backup Database</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+            Su Render il database è effimero. Esporta regolarmente i tuoi dati per non perdere i progressi verso il 19 Aprile!
+        </p>
+
+        <a href="{{ url_for('esporta_db') }}" class="btn btn-primary btn-full" style="margin-bottom: 12px;">
+            📥 Esporta Database
+        </a>
+
+        <form method="POST" action="{{ url_for('importa_db') }}" enctype="multipart/form-data" class="form">
+            <div class="form-group">
+                <label for="file">Importa Database (.db)</label>
+                <input type="file" id="file" name="file" accept=".db"
+                       class="input-field file-input" required>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-full"
+                    onclick="return confirm('Attenzione: il database attuale verrà sostituito. Continuare?')">
+                📤 Importa Database
+            </button>
+        </form>
+    </div>
+
+    <!-- Info App -->
+    <div class="info-card info-card-secondary">
+        <h3>🏃‍♂️ Info App</h3>
+        <table class="info-table">
+            <tr><td>Obiettivo</td><td>Maratona di Torino — 19 Aprile 2026</td></tr>
+            <tr><td>Target Passo</td><td>4:35 – 4:40 min/km</td></tr>
+            <tr><td>Versione</td><td>1.0.0</td></tr>
+        </table>
+    </div>
+
+    <a href="{{ url_for('logout') }}" class="btn btn-outline btn-full" style="margin-top: 8px;">🚪 Logout</a>
+</div>
+{% endblock %}

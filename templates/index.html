@@ -7,7 +7,7 @@
     <div class="hero-card">
         <div class="hero-emoji">🏃‍♂️</div>
         <h1>Maratona di Torino</h1>
-        <p class="hero-date">19 Aprile 2026 — Target {{ "%.2f"|format(target_pace) }} min/km</p>
+        <p class="hero-date">19 Aprile 2026 — Target {{ "%.2f"|format(target_pace) }} – {{ "%.2f"|format(target_pace_max) }} min/km</p>
         <div class="countdown">
             <div class="countdown-number">{{ giorni_mancanti }}</div>
             <div class="countdown-label">giorni alla gara</div>
@@ -96,7 +96,7 @@
 createLineChart('passoChart',
     {{ passo_trend|map(attribute='data')|list|tojson }},
     {{ passo_trend|map(attribute='passo_min_km')|list|tojson }},
-    'Passo (min/km)', '#e94560', {{ target_pace }}
+    'Passo (min/km)', '#e94560', {{ target_pace }}, {{ target_pace_max }}
 );
 {% endif %}
 

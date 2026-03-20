@@ -1,10 +1,11 @@
 import os
 import secrets
+import shutil
 from datetime import date, datetime
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    flash, jsonify, session
+    flash, jsonify, session, send_file
 )
 
 from database_manager import get_db, inizializza_db
@@ -22,6 +23,7 @@ app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 RACE_DATE = date(2026, 4, 19)
 TARGET_PACE = 4.35  # min/km
+TARGET_PACE_MAX = 4.40  # min/km (upper bound of target zone)
 
 # ---------- Inizializzazione ----------
 inizializza_db()
@@ -110,6 +112,7 @@ def index():
         giorni_mancanti=giorni_mancanti,
         race_date=RACE_DATE,
         target_pace=TARGET_PACE,
+        target_pace_max=TARGET_PACE_MAX,
         allenamenti=allenamenti,
         stats=stats,
         km_settimanali=km_settimanali,
@@ -310,8 +313,9 @@ def nuova_nutrizione():
         db.execute(
             '''INSERT INTO salute
                (data, peso, proteine_gr, carboidrati_gr, grassi_gr,
-                calorie_assunte, acqua_litri, creatina_preso, note)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                calorie_assunte, acqua_litri, creatina_preso,
+                proteine_prese, note)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (
                 request.form['data'],
                 request.form.get('peso') or None,
@@ -321,6 +325,7 @@ def nuova_nutrizione():
                 request.form.get('calorie_assunte') or None,
                 request.form.get('acqua_litri') or None,
                 1 if request.form.get('creatina_preso') else 0,
+                1 if request.form.get('proteine_prese') else 0,
                 request.form.get('note') or None,
             )
         )
@@ -524,6 +529,59 @@ def api_fc_trend():
         'labels': [r['data'] for r in rows],
         'values': [round(r['fc'], 0) for r in rows],
     })
+
+
+# ---------- Impostazioni ----------
+@app.route('/impostazioni')
+def impostazioni():
+    return render_template('impostazioni.html')
+
+
+@app.route('/esporta-db')
+def esporta_db():
+    from database_manager import DB_PATH
+    if os.path.exists(DB_PATH):
+        return send_file(
+            DB_PATH,
+            as_attachment=True,
+            download_name='maratona.db',
+            mimetype='application/x-sqlite3',
+        )
+    flash('Database non trovato', 'error')
+    return redirect(url_for('impostazioni'))
+
+
+@app.route('/importa-db', methods=['POST'])
+def importa_db():
+    from database_manager import DB_PATH
+    if 'file' not in request.files:
+        flash('Nessun file selezionato', 'error')
+        return redirect(url_for('impostazioni'))
+
+    file = request.files['file']
+    if file.filename == '':
+        flash('Nessun file selezionato', 'error')
+        return redirect(url_for('impostazioni'))
+
+    if not file.filename.endswith('.db'):
+        flash('Formato non valido. Usa un file .db', 'error')
+        return redirect(url_for('impostazioni'))
+
+    # Create backup of current database before overwriting
+    if os.path.exists(DB_PATH):
+        backup_path = DB_PATH + '.backup'
+        shutil.copy2(DB_PATH, backup_path)
+
+    try:
+        file.save(DB_PATH)
+        flash('Database importato con successo!', 'success')
+    except Exception:
+        # Restore backup on failure
+        if os.path.exists(DB_PATH + '.backup'):
+            shutil.copy2(DB_PATH + '.backup', DB_PATH)
+        flash('Errore durante l\'importazione del database', 'error')
+
+    return redirect(url_for('impostazioni'))
 
 
 # ---------- PWA ----------
