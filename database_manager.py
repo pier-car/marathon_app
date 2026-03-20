@@ -73,6 +73,14 @@ def inizializza_db():
                   creatina_preso BOOLEAN DEFAULT 0,
                   note TEXT)''')
 
+    # Tabella configurazione Strava OAuth
+    c.execute('''CREATE TABLE IF NOT EXISTS strava_config
+                 (id INTEGER PRIMARY KEY CHECK (id = 1),
+                  athlete_id INTEGER,
+                  access_token TEXT,
+                  refresh_token TEXT,
+                  token_expires_at INTEGER)''')
+
     # Migrazione: aggiungi colonne mancanti alle tabelle esistenti
     _migrate_table(c, 'allenamenti', {
         'durata_minuti': 'REAL',

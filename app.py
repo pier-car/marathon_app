@@ -1,8 +1,10 @@
 import os
 import secrets
 import shutil
+import time
 from datetime import date, datetime
 
+import requests as http_requests
 from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, jsonify, session, send_file
@@ -25,6 +27,13 @@ RACE_DATE = date(2026, 4, 19)
 TARGET_PACE = 4.35  # min/km
 TARGET_PACE_MAX = 4.40  # min/km (upper bound of target zone)
 
+# ---------- Strava API Config ----------
+STRAVA_CLIENT_ID = os.environ.get('STRAVA_CLIENT_ID', '')
+STRAVA_CLIENT_SECRET = os.environ.get('STRAVA_CLIENT_SECRET', '')
+STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize'
+STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
+STRAVA_API_BASE = 'https://www.strava.com/api/v3'
+
 # ---------- Inizializzazione ----------
 inizializza_db()
 
@@ -35,7 +44,7 @@ PIN_CODE = os.environ.get('APP_PIN', 'pier2026')
 
 @app.before_request
 def require_login():
-    allowed = ('login', 'static', 'sw_js', 'manifest_json')
+    allowed = ('login', 'static', 'sw_js', 'manifest_json', 'strava_callback')
     if request.endpoint not in allowed and not session.get('authenticated'):
         return redirect(url_for('login'))
 
@@ -534,7 +543,20 @@ def api_fc_trend():
 # ---------- Impostazioni ----------
 @app.route('/impostazioni')
 def impostazioni():
-    return render_template('impostazioni.html')
+    db = get_db()
+    strava_config = db.execute(
+        'SELECT * FROM strava_config WHERE id = 1'
+    ).fetchone()
+    db.close()
+    strava_connected = (
+        strava_config is not None and strava_config['access_token']
+    )
+    strava_configured = bool(STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET)
+    return render_template(
+        'impostazioni.html',
+        strava_connected=strava_connected,
+        strava_configured=strava_configured,
+    )
 
 
 @app.route('/esporta-db')
@@ -582,6 +604,255 @@ def importa_db():
         flash('Errore durante l\'importazione del database', 'error')
 
     return redirect(url_for('impostazioni'))
+
+
+# ---------- Strava Integration ----------
+def _get_strava_tokens():
+    """Retrieve stored Strava tokens from the database."""
+    db = get_db()
+    config = db.execute(
+        'SELECT * FROM strava_config WHERE id = 1'
+    ).fetchone()
+    db.close()
+    return config
+
+
+def _refresh_strava_token(config):
+    """Refresh the Strava access token if expired. Returns new access token."""
+    if config['token_expires_at'] and config['token_expires_at'] > time.time():
+        return config['access_token']
+
+    resp = http_requests.post(STRAVA_TOKEN_URL, data={
+        'client_id': STRAVA_CLIENT_ID,
+        'client_secret': STRAVA_CLIENT_SECRET,
+        'grant_type': 'refresh_token',
+        'refresh_token': config['refresh_token'],
+    }, timeout=15)
+    if resp.status_code != 200:
+        return None
+
+    data = resp.json()
+    db = get_db()
+    db.execute(
+        '''UPDATE strava_config
+           SET access_token = ?, refresh_token = ?, token_expires_at = ?
+           WHERE id = 1''',
+        (data['access_token'], data['refresh_token'], data['expires_at'])
+    )
+    db.commit()
+    db.close()
+    return data['access_token']
+
+
+@app.route('/strava/connect')
+def strava_connect():
+    if not STRAVA_CLIENT_ID or not STRAVA_CLIENT_SECRET:
+        flash('Strava non configurato. Imposta STRAVA_CLIENT_ID e '
+              'STRAVA_CLIENT_SECRET.', 'error')
+        return redirect(url_for('impostazioni'))
+
+    callback_url = url_for('strava_callback', _external=True)
+    auth_url = (
+        f"{STRAVA_AUTH_URL}?client_id={STRAVA_CLIENT_ID}"
+        f"&response_type=code&redirect_uri={callback_url}"
+        f"&scope=read,activity:read_all"
+        f"&approval_prompt=auto"
+    )
+    return redirect(auth_url)
+
+
+@app.route('/strava/callback')
+def strava_callback():
+    error = request.args.get('error')
+    if error:
+        flash('Autorizzazione Strava negata.', 'error')
+        return redirect(url_for('impostazioni'))
+
+    code = request.args.get('code')
+    if not code:
+        flash('Codice di autorizzazione mancante.', 'error')
+        return redirect(url_for('impostazioni'))
+
+    resp = http_requests.post(STRAVA_TOKEN_URL, data={
+        'client_id': STRAVA_CLIENT_ID,
+        'client_secret': STRAVA_CLIENT_SECRET,
+        'code': code,
+        'grant_type': 'authorization_code',
+    }, timeout=15)
+
+    if resp.status_code != 200:
+        flash('Errore durante l\'autenticazione con Strava.', 'error')
+        return redirect(url_for('impostazioni'))
+
+    data = resp.json()
+    athlete = data.get('athlete', {})
+
+    db = get_db()
+    db.execute(
+        '''INSERT INTO strava_config (id, athlete_id, access_token,
+               refresh_token, token_expires_at)
+           VALUES (1, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+               athlete_id = excluded.athlete_id,
+               access_token = excluded.access_token,
+               refresh_token = excluded.refresh_token,
+               token_expires_at = excluded.token_expires_at''',
+        (athlete.get('id'), data['access_token'],
+         data['refresh_token'], data['expires_at'])
+    )
+    db.commit()
+    db.close()
+
+    flash('Account Strava collegato con successo! 🎉', 'success')
+    return redirect(url_for('impostazioni'))
+
+
+@app.route('/strava/disconnect', methods=['POST'])
+def strava_disconnect():
+    config = _get_strava_tokens()
+    if config and config['access_token']:
+        try:
+            http_requests.post(
+                'https://www.strava.com/oauth/deauthorize',
+                data={'access_token': config['access_token']},
+                timeout=10,
+            )
+        except http_requests.RequestException:
+            pass
+
+    db = get_db()
+    db.execute('DELETE FROM strava_config WHERE id = 1')
+    db.commit()
+    db.close()
+    flash('Account Strava scollegato.', 'info')
+    return redirect(url_for('impostazioni'))
+
+
+@app.route('/sync-strava', methods=['POST'])
+def sync_strava():
+    config = _get_strava_tokens()
+    if not config or not config['access_token']:
+        flash('Collega prima il tuo account Strava.', 'error')
+        return redirect(url_for('impostazioni'))
+
+    access_token = _refresh_strava_token(config)
+    if not access_token:
+        flash('Errore nel rinnovo del token Strava. Ricollega l\'account.',
+              'error')
+        return redirect(url_for('impostazioni'))
+
+    try:
+        resp = http_requests.get(
+            f'{STRAVA_API_BASE}/athlete/activities',
+            headers={'Authorization': f'Bearer {access_token}'},
+            params={'per_page': 50, 'page': 1},
+            timeout=15,
+        )
+    except http_requests.RequestException:
+        flash('Errore di connessione con Strava.', 'error')
+        return redirect(url_for('strava_page'))
+
+    if resp.status_code != 200:
+        flash('Errore nel recupero delle attività da Strava.', 'error')
+        return redirect(url_for('strava_page'))
+
+    activities = resp.json()
+    db = get_db()
+    count = 0
+    in_target = 0
+
+    for activity in activities:
+        if activity.get('type') != 'Run':
+            continue
+
+        distance_km = round(activity.get('distance', 0) / 1000, 2)
+        moving_time_min = round(activity.get('moving_time', 0) / 60, 2)
+        elapsed_date = activity.get('start_date_local', '')[:10]
+
+        if distance_km > 0 and moving_time_min > 0:
+            pace = round(moving_time_min / distance_km, 2)
+        else:
+            pace = None
+
+        fc_media = None
+        if activity.get('has_heartrate') and activity.get(
+                'average_heartrate'):
+            fc_media = round(activity['average_heartrate'])
+
+        fc_max = None
+        if activity.get('max_heartrate'):
+            fc_max = round(activity['max_heartrate'])
+
+        cadenza = None
+        if activity.get('average_cadence'):
+            cadenza = round(activity['average_cadence'] * 2)
+
+        calorie = None
+        if activity.get('calories'):
+            calorie = round(activity['calories'])
+
+        strava_id = activity.get('id')
+        existing = db.execute(
+            "SELECT id FROM allenamenti WHERE sorgente = 'strava' "
+            "AND note LIKE ?", (f'%strava_id:{strava_id}%',)
+        ).fetchone()
+        if existing:
+            continue
+
+        note = f"strava_id:{strava_id}"
+        activity_name = activity.get('name', '')
+        if activity_name:
+            note = f"{activity_name} | {note}"
+
+        db.execute(
+            '''INSERT INTO allenamenti
+               (data, km, durata_minuti, passo_min_km, tipo,
+                fc_media, fc_max, cadenza, calorie, note, sorgente)
+               VALUES (?, ?, ?, ?, 'Corsa', ?, ?, ?, ?, ?, 'strava')''',
+            (elapsed_date, distance_km, moving_time_min, pace,
+             fc_media, fc_max, cadenza, calorie, note)
+        )
+        count += 1
+
+        if pace and TARGET_PACE <= pace <= TARGET_PACE_MAX:
+            in_target += 1
+
+    db.commit()
+    db.close()
+
+    if count == 0:
+        flash('Nessuna nuova attività di corsa trovata.', 'info')
+    else:
+        msg = f'{count} allenamenti importati da Strava! 🏃'
+        if in_target > 0:
+            msg += f' ({in_target} nel target {TARGET_PACE:.2f}-{TARGET_PACE_MAX:.2f} min/km ✅)'
+        flash(msg, 'success')
+
+    return redirect(url_for('strava_page'))
+
+
+@app.route('/strava')
+def strava_page():
+    config = _get_strava_tokens()
+    strava_connected = config is not None and bool(
+        config['access_token'] if config else False
+    )
+
+    db = get_db()
+    strava_workouts = db.execute(
+        '''SELECT * FROM allenamenti WHERE sorgente = 'strava'
+           ORDER BY data DESC LIMIT 10'''
+    ).fetchall()
+    db.close()
+
+    return render_template(
+        'strava.html',
+        strava_connected=strava_connected,
+        strava_configured=bool(STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET),
+        strava_workouts=strava_workouts,
+        target_pace=TARGET_PACE,
+        target_pace_max=TARGET_PACE_MAX,
+    )
 
 
 # ---------- PWA ----------
